@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<title>Animasjon av sorteringsalgoritmer og Effektivitet</title>
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 0; }
+  h1 { margin-top: 20px; }
+  .container {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin: 20px;
+  }
+  section {
+    width: 30%;
+    min-width: 300px;
+    box-sizing: border-box;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin: 10px;
+    background-color: #f9f9f9;
+  }
+  canvas {
+    border: 1px solid #ccc;
+    display: block;
+    margin: 10px auto;
+    max-width: 100%;
+  }
+  button { margin: 5px; padding: 10px; }
+  .stats { font-size: 14px; margin-top: 10px; }
+  .slider-container { margin-top: 10px; }
+  .small-italic { font-style: italic; font-size: 14px; }
+
+  /* Infoboks-stil */
+  .infobox-container {
+    display: flex;
+    justify-content: space-around;
+    margin: 30px 20px;
+    flex-wrap: wrap;
+  }
+  .infobox {
+    width: 250px;
+    padding: 15px;
+    border-radius: 10px;
+    color: #fff;
+    text-align: center;
+    margin: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+  .bubble { background-color: #FF5722; }
+  .selection { background-color: #2196F3; }
+  .quick { background-color: #4CAF50;}
+  .infobox i {
+    font-size: 40px;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .title { font-weight: bold; font-size: 18px; margin-bottom: 8px; }
+  .desc { font-size: 14px; font-style: italic; }
+</style>
+https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css
+</head>
+<body>
+<h1>Sorteringsanimasjoner</h1>
+
+<!-- Animasjoner -->
+<div class="container">
+  <section>
+    <h2>Boblesortering</h2>
+    <span class="small-italic">Sammenligner naboelementer og bytter plass til de største verdiene har "boblet" seg til slutten av tabellen</span>
+    <canvas id="bubbleCanvas" width="250" height="150"></canvas>
+    <button onclick="startBubbleSort()">Start Boblesortering</button>
+    <div class="slider-container">
+      Hastighet: <input type="range" id="bubbleSpeed" min="50" max="1000" value="300"> ms
+    </div>
+    <div class="stats" id="bubbleStats"></div>
+  </section>
+
+  <section>
+    <h2>Sortering ved utvelgelse</h2>
+    <span class="small-italic">Finner det minste elementet og plasserer det først, gjentar prosessen for resten av listen til alle element er sortert.</span>
+    <canvas id="selectionCanvas" width="250" height="150"></canvas>
+    <button onclick="startSelectionSort()">Start Sortering ved utvelgelse</button>
+    <div class="slider-container">
+      Hastighet: <input type="range" id="selectionSpeed" min="50" max="1000" value="300"> ms
+    </div>
+    <div class="stats" id="selectionStats"></div>
+  </section>
+
+  <section>
+    <h2>QuickSort</h2>
+    <span class="small-italic">Velger et pivot-element, deler listen i to deler og sorterer dem rekursivt</span>
+    <canvas id="quickCanvas" width="250" height="150"></canvas>
+    <button onclick="startQuickSort()">Start QuickSort</button>
+    <div class="slider-container">
+      Hastighet: <input type="range" id="quickSpeed" min="50" max="1000" value="300"> ms
+    </div>
+    <div class="stats" id="quickStats"></div>
+  </section>
+</div>
+
+<!-- Infobokser -->
+<h1>Effektivitet av algoritmene</h1>
+<div class="infobox-container">
+  <div class="infobox bubble">
+    <i class="fas fa-water"></i>
+    <div class="title">Boblesortering</div>
+    <div class="desc">Enkel, men ineffektiv for store datasett (O(n²)).</div>
+  </div>
+  <div class="infobox selection">
+    <i class="fas fa-hand-pointer"></i>
+    <div class="title">Sortering ved utvelgelse</div>
+    <div class="desc">O(n²), færre bytter enn boblesortering.</div>
+  </div>
+  <div class="infobox quick">
+    <i class="fas fa-bolt"></i>
+    <div class="title">QuickSort</div>
+    <div class="desc">Mest effektiv, gjennomsnittlig O(n log n).</div>
+  </div>
+</div>
+
+<script>
+const size = 20;
+
+function drawArray(ctx, arr, highlight = []) {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  arr.forEach((val, idx) => {
+    ctx.fillStyle = highlight.includes(idx) ? 'orange' : 'steelblue';
+    ctx.fillRect(idx * (ctx.canvas.width / size), ctx.canvas.height - val, (ctx.canvas.width / size) - 4, val);
+  });
+}
+
+// Boblesortering med hastighet
+function startBubbleSort() {
+  const canvas = document.getElementById('bubbleCanvas');
+  const ctx = canvas.getContext('2d');
+  const speed = document.getElementById('bubbleSpeed').value;
+  let arr = Array.from({length: size}, () => Math.floor(Math.random() * 150) + 20);
+  let i = 0, j = 0, swaps = 0, comps = 0;
+  drawArray(ctx, arr);
+
+  function step() {
+    if (i < arr.length) {
+      if (j < arr.length - i - 1) {
+        comps++;
+        if (arr[j] > arr[j + 1]) {
+          [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+          swaps++;
+        }
+        drawArray(ctx, arr, [j, j + 1]);
+        j++;
+      } else { j = 0; i++; }
+      document.getElementById('bubbleStats').innerText = `Sammenligninger: ${comps}, Bytter: ${swaps}`;
+      setTimeout(step, speed);
+    }
+  }
+  step();
+}
+
+// Sortering ved utvelgelse inkl hastighet
+function startSelectionSort() {
+  const canvas = document.getElementById('selectionCanvas');
+  const ctx = canvas.getContext('2d');
+  const speed = document.getElementById('selectionSpeed').value;
+  let arr = Array.from({length: size}, () => Math.floor(Math.random() * 150) + 20);
+  let i = 0, j = i + 1, minIndex = i, swaps = 0, comps = 0;
+  drawArray(ctx, arr);
+
+  function step() {
+    if (i < arr.length - 1) {
+      if (j < arr.length) {
+        comps++;
+        if (arr[j] < arr[minIndex]) minIndex = j;
+        drawArray(ctx, arr, [i, j, minIndex]);
+        j++;
+      } else {
+        [arr[i], arr[minIndex]] = [arr[minIndex], arr[i]];
+        swaps++;
+        i++; j = i + 1; minIndex = i;
+      }
+      document.getElementById('selectionStats').innerText = `Sammenligninger: ${comps}, Bytter: ${swaps}`;
+      setTimeout(step, speed);
+    }
+  }
+  step();
+}
+
+// QuickSort med hastighet
+function startQuickSort() {
+  const canvas = document.getElementById('quickCanvas');
+  const ctx = canvas.getContext('2d');
+  const speed = document.getElementById('quickSpeed').value;
+  let arr = Array.from({length: size}, () => Math.floor(Math.random() * 150) + 20);
+  let stack = [[0, arr.length - 1]], swaps = 0, comps = 0;
+  drawArray(ctx, arr);
+
+  function step() {
+    if (stack.length > 0) {
+      let [low, high] = stack.pop();
+      if (low < high) {
+        let pivot = arr[high], i = low;
+        for (let j = low; j < high; j++) {
+          comps++;
+          if (arr[j] < pivot) {
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+            swaps++;
+            i++;
+          }
+        }
+        [arr[i], arr[high]] = [arr[high], arr[i]];
+        swaps++;
+        stack.push([low, i - 1], [i + 1, high]);
+      }
+      drawArray(ctx, arr, [low, high]);
+      document.getElementById('quickStats').innerText = `Sammenligninger: ${comps}, Bytter: ${swaps}`;
+      setTimeout(step, speed);
+    }
+  }
+  step();
+}
+</script>
+</body>
+</html>
